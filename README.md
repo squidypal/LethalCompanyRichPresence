@@ -1,6 +1,6 @@
 # Rich Presence 
 
-Tells anyone who checks your discord status
+Tells anyone who checks your discord status:
 
 - Whether or not you're in game
 - If you're meeting quota and by how much / little
