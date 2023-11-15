@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using Unity.Netcode;
 using UnityEngine.Networking;
 using Discord;
-using Random = UnityEngine.Random;
 
 
 namespace LethalPresence
@@ -78,65 +77,21 @@ namespace LethalPresence
             public override void OnUpdate()
             {
                 _discord?.RunCallbacks();
-                if (inGame)
+                if (!inGame) return;
+                SetActivity(defaultActivity);
+                if (TimeOfDay.Instance.profitQuota > TimeOfDay.Instance.quotaFulfilled)
                 {
-                    SetActivity(defaultActivity);
-                    if (TimeOfDay.Instance.profitQuota > TimeOfDay.Instance.quotaFulfilled)
-                    {
-                        defaultActivity.Details = "Not meeting quota " + TimeOfDay.Instance.quotaFulfilled + "/" +
-                                                TimeOfDay.Instance.profitQuota;
-                    }
-                    else
-                    {
-                        defaultActivity.Details = "Meeting quota " + TimeOfDay.Instance.quotaFulfilled + "/" +
-                                                TimeOfDay.Instance.profitQuota;
-                    }
-
-                    defaultActivity.State = TimeOfDay.Instance.daysUntilDeadline + " days and " +
-                                              TimeOfDay.Instance.hoursUntilDeadline + " hours until deadline";
-
-                    switch (TimeOfDay.Instance.currentLevel.ToString())
-                    {
-                        
-                    }
-
-                    // Kill me there has to be a better way to do this
-                    // Not doing this SHIT!
-                    /*string currentLevelString = TimeOfDay.Instance.currentLevel.ToString();
-
-                    if (Moons[0] == currentLevelString)
-                    {
-                      
-                    }
-                    else if (Moons[1] == currentLevelString)
-                    {
-                       
-                    }
-                    else if (Moons[2] == currentLevelString)
-                    {
-                        
-                    }
-                    else if (Moons[3] == currentLevelString)
-                    {
-                     
-                    }
-                    else if (Moons[4] == currentLevelString)
-                    {
-                      
-                    }
-                    else if (Moons[5] == currentLevelString)
-                    {
-                      
-                    }
-                    else if (Moons[6] == currentLevelString)
-                    {
-                      
-                    }
-                    else if (Moons[7] == currentLevelString)
-                    {
-                     
-                    }*/
+                    defaultActivity.Details = "Not meeting quota " + TimeOfDay.Instance.quotaFulfilled + "/" +
+                                              TimeOfDay.Instance.profitQuota;
                 }
+                else
+                {
+                    defaultActivity.Details = "Meeting quota " + TimeOfDay.Instance.quotaFulfilled + "/" +
+                                              TimeOfDay.Instance.profitQuota;
+                }
+
+                defaultActivity.State = TimeOfDay.Instance.daysUntilDeadline + " days and " +
+                                        TimeOfDay.Instance.hoursUntilDeadline + " hours until deadline";
             }
 
             public static void LoadEmbeddedDll()
@@ -170,10 +125,12 @@ namespace LethalPresence
                         inGame = true;
                         break;
                     case "MainMenu":
+                        defaultActivity.State = "Deciding what to do";
                         defaultActivity.Details = "In the Menu";
                         SetActivity(defaultActivity);
                         inGame = false;
                         break;
+                        
                 }
             }
             
