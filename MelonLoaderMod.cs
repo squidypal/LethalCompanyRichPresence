@@ -1,0 +1,217 @@
+﻿using MelonLoader;
+using UnityEngine;
+using System.Collections;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices;
+using Unity.Netcode;
+using UnityEngine.Networking;
+using Discord;
+using Random = UnityEngine.Random;
+
+
+namespace LethalPresence
+{
+    using TMPro;
+
+    public static class BuildInfo
+    {
+        public const string Name = "Lethal Presence"; // Name of the Mod.  (MUST BE SET)
+        public const string Author = "squidypal"; // Author of the Mod.  (Set as null if none)
+        public const string Company = null; // Company that made the Mod.  (Set as null if none)
+        public const string Version = "1.0.0"; // Version of the Mod.  (MUST BE SET)
+        public const string DownloadLink = null; // Download Link for the Mod.  (Set as null if none)
+    }
+    
+    public class LethalPresence : MelonMod
+    {
+            private static Discord.Discord _discord;
+            private static ActivityManager _activityManager;
+            private static long _clientId = 1174141549764935721;
+            private int quota = 0;
+
+            public List<String> Moons;
+
+            private bool inGame;
+
+            public static Activity defaultActivity = new Activity()
+            {
+                State = "Picking a launch mode",
+                Details = "Ready to be a great great asset!",
+                Assets =
+                {
+                    LargeImage = "lethalcompanylargeimage",
+                    LargeText = "Lethal Company",
+                    SmallImage = "faceicon",
+                    SmallText = "Lethal Company"
+                },
+            };
+
+            public override void OnApplicationStart()
+            {
+                try
+                {
+                    LoadEmbeddedDll();
+                    _discord = new Discord.Discord(_clientId, 0L);
+                    _activityManager = _discord.GetActivityManager();
+                    _activityManager.RegisterSteam(1966720);
+        
+                    MelonLogger.Msg("RichPresence created.");
+                    SetActivity(defaultActivity);
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Error("Error in OnApplicationStart: " + ex.Message);
+                }
+                
+                Moons.Add("ExperimentationLevel (SelectableLevel)");
+                Moons.Add("AssuranceLevelLevel (SelectableLevel)");
+                Moons.Add("VowLevel (SelectableLevel)");
+                Moons.Add("OffenseLevel (SelectableLevel)");
+                Moons.Add("MarchLevel (SelectableLevel)");
+                Moons.Add("RendLevel (SelectableLevel)");
+                Moons.Add("DineLevel (SelectableLevel)");
+                Moons.Add("TitanLevel (SelectableLevel)");
+            }
+
+            public override void OnUpdate()
+            {
+                _discord?.RunCallbacks();
+                if (inGame)
+                {
+                    SetActivity(defaultActivity);
+                    if (TimeOfDay.Instance.profitQuota > TimeOfDay.Instance.quotaFulfilled)
+                    {
+                        defaultActivity.Details = "Not meeting quota " + TimeOfDay.Instance.quotaFulfilled + "/" +
+                                                TimeOfDay.Instance.profitQuota;
+                    }
+                    else
+                    {
+                        defaultActivity.Details = "Meeting quota " + TimeOfDay.Instance.quotaFulfilled + "/" +
+                                                TimeOfDay.Instance.profitQuota;
+                    }
+
+                    defaultActivity.State = TimeOfDay.Instance.daysUntilDeadline + " days and " +
+                                              TimeOfDay.Instance.hoursUntilDeadline + " hours until deadline";
+
+                    switch (TimeOfDay.Instance.currentLevel.ToString())
+                    {
+                        
+                    }
+
+                    // Kill me there has to be a better way to do this
+                    // Not doing this SHIT!
+                    /*string currentLevelString = TimeOfDay.Instance.currentLevel.ToString();
+
+                    if (Moons[0] == currentLevelString)
+                    {
+                      
+                    }
+                    else if (Moons[1] == currentLevelString)
+                    {
+                       
+                    }
+                    else if (Moons[2] == currentLevelString)
+                    {
+                        
+                    }
+                    else if (Moons[3] == currentLevelString)
+                    {
+                     
+                    }
+                    else if (Moons[4] == currentLevelString)
+                    {
+                      
+                    }
+                    else if (Moons[5] == currentLevelString)
+                    {
+                      
+                    }
+                    else if (Moons[6] == currentLevelString)
+                    {
+                      
+                    }
+                    else if (Moons[7] == currentLevelString)
+                    {
+                     
+                    }*/
+                }
+            }
+
+            public static void LoadEmbeddedDll()
+            {
+                // Get bytes of the embedded DLL
+                byte[] dllBytes = EmbeddedResourceHelper.GetResourceBytes("discord_game_sdk.dll");
+                if (dllBytes == null)
+                {
+                    throw new Exception("Failed to find embedded resource: discord_game_sdk.dll");
+                }
+
+                // Save the bytes to a temporary file
+                string tempDllPath = Path.Combine(Path.GetTempPath(), "discord_game_sdk.dll");
+                File.WriteAllBytes(tempDllPath, dllBytes);
+
+                // Load the DLL from the temporary file
+                IntPtr libHandle = DllTools.LoadLibrary(tempDllPath);
+                if (libHandle == IntPtr.Zero)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    throw new Exception($"Failed to load discord_game_sdk.dll. Error Code: {errorCode}");
+                }
+            }
+
+            public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+            {
+                switch (sceneName)
+                {
+                    // Sample scene relay is the in-game thing
+                    case "SampleSceneRelay":
+                        inGame = true;
+                        break;
+                    case "MainMenu":
+                        defaultActivity.Details = "In the Menu";
+                        SetActivity(defaultActivity);
+                        inGame = false;
+                        break;
+                }
+            }
+            
+            public class EmbeddedResourceHelper
+            {
+                public static byte[] GetResourceBytes(String filename)
+                {
+                    System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    foreach (var resource in assembly.GetManifestResourceNames())
+                    {
+                        if (resource.Contains(filename))
+                        {
+                            using (Stream resFilestream = assembly.GetManifestResourceStream(resource))
+                            {
+                                if (resFilestream == null) return null;
+                                byte[] ba = new byte[resFilestream.Length];
+                                resFilestream.Read(ba, 0, ba.Length);
+                                return ba;
+                            }
+                        }
+                    }
+                    return null;
+                }
+            }
+            
+            public static class DllTools
+            {
+                [DllImport("kernel32.dll")]
+                public static extern IntPtr LoadLibrary(string dllPath);
+            }
+
+            public static void SetActivity(Activity activity)
+            {
+                _activityManager.UpdateActivity(activity, (result =>
+                {
+                    if (result != Result.Ok)
+                        MelonLogger.Msg("Failed: " + result);
+                }));
+            }
+        }
+    }
