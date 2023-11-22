@@ -65,17 +65,7 @@ namespace LethalPresence
                 catch (Exception ex)
                 {
                     MelonLogger.Error("Error in OnApplicationStart: " + ex.Message);
-                }
-
-                // Unused moons list that might be used later
-                Moons.Add("ExperimentationLevel (SelectableLevel)");
-                Moons.Add("AssuranceLevelLevel (SelectableLevel)");
-                Moons.Add("VowLevel (SelectableLevel)");
-                Moons.Add("OffenseLevel (SelectableLevel)");
-                Moons.Add("MarchLevel (SelectableLevel)");
-                Moons.Add("RendLevel (SelectableLevel)");
-                Moons.Add("DineLevel (SelectableLevel)");
-                Moons.Add("TitanLevel (SelectableLevel)");
+                }    
             }
 
             public override void OnUpdate()
